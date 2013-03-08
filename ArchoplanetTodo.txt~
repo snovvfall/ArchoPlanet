@@ -19,10 +19,6 @@ Data representation
     Camera moves slower when near ground
 Python
     Names of all variables and functions should begin with capital letters
-Blender
-    Actions
-    Reload scene with same camera position
-    Zombie objects
 Projects
     Parse
     Change existing objects
