@@ -119,6 +119,11 @@ if bge.logic.mouse.events[bge.events.LEFTMOUSE] == bge.logic.KX_INPUT_JUST_ACTIV
         if objectIterate.color == InterfaceColorClicked and 'Level4' in objectIterate.name:
             Level4ClickedCurrent = objectIterate
     
+    # Highlight clicked item and show its inside next level items
+    objectClicked.playAction('InterfaceClickedOn', 1, 12, layer = 0, play_mode = bge.logic.KX_ACTION_MODE_PLAY)
+    if  objectClicked.name + ' Parent' in sceneInterface.objects:
+        sceneInterface.objects[objectClicked.name + ' Parent'].playAction('Visible', 1, 12, layer = 0, play_mode = bge.logic.KX_ACTION_MODE_PLAY)
+    
     # If clicked interface Level 1
     if 'Level1' in objectClicked.name:     
         level1Clear()
@@ -151,7 +156,3 @@ if bge.logic.mouse.events[bge.events.LEFTMOUSE] == bge.logic.KX_INPUT_JUST_ACTIV
     # If clicked interface Level 4
     elif 'Level4' in objectClicked.name:
         level4Clear()
-    
-    # Highlight clicked item and show its inside next level items
-    sceneInterface.objects[objectClicked.name + ' Parent'].playAction('Visible', 1, 12, layer = 0, play_mode = bge.logic.KX_ACTION_MODE_PLAY)
-    objectClicked.playAction('InterfaceClickedOn', 1, 12, layer = 0, play_mode = bge.logic.KX_ACTION_MODE_PLAY)
