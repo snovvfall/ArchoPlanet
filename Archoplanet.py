@@ -1,16 +1,37 @@
 import bge, mathutils, os, imp
 
+# Open workbook and its sheet
 def WorkbookSheet(WorkbookPath, SheetName):
     Workbook = xlrd3.open_workbook(os.path.join(os.path.abspath(''), WorkbookPath))
     Workbook.sheet_names()
     Sheet = Workbook.sheet_by_name(SheetName)
     return Sheet
 
+# Find number of column with specified name
 def WorkbookSheetColumnNumber(Sheet, SheetColumn):
     for SheetColumnIterate in range(Sheet.ncols):
         if Sheet.cell(0,SheetColumnIterate).value == SheetColumn:
             SheetColumnNumber = SheetColumnIterate
     return SheetColumnNumber
+
+# Show building's parameters when 'Level2 Buildings *' object clicked
+def Level2Parameter(SheetName, SheetColumn):
+    WorkbookPath = os.path.join('Cities', 'Irkutsk', 'Irkutsk.xls')
+    WorkbookSheet(WorkbookPath, SheetName)
+            
+    Sheet = WorkbookSheet(WorkbookPath, SheetName)
+    WorkbookSheetColumnNumber(Sheet, SheetColumn)
+    SheetColumnNumber = WorkbookSheetColumnNumber(Sheet, SheetColumn)
+            
+    # Iterate all lines in sheet, 'for SheetRow in range(Sheet.nrows):' will not work, I don't know why
+    for SheetRow in range(1, 99999):
+        ObjectCurrentName = Sheet.cell(SheetRow,0).value
+        if ObjectCurrentName in sceneCity.objects:
+            objectCurrent = sceneCity.objects[ObjectCurrentName]
+                    
+            # Convert cell value from float to string, remove 'text:' and '.0', play action
+            actionCurrent = 'ScaleZ' + str(Sheet.cell(SheetRow,SheetColumnNumber).value).replace('text:', '').replace('.0', '')
+            objectCurrent.playAction(actionCurrent, 1, 12, layer = 0, play_mode = bge.logic.KX_ACTION_MODE_PLAY)
 
 def level1Clear():
     Level1ClickedCurrent.playAction('InterfaceClickedOff', 1, 12, layer = 0, play_mode = bge.logic.KX_ACTION_MODE_PLAY)
@@ -40,14 +61,23 @@ for sceneIterate in scenes:
     if 'Cities' in sceneIterate.name:
         sceneCity = sceneIterate
 
-# Dim all objects except landscape and text
+# Assign colors which will be used later
+InterfaceColorNormal = mathutils.Vector((0.5, 0.5, 0.5, 0.2))
+InterfaceColorClicked = mathutils.Vector((0.5, 0.5, 0.5, 0.7))
+InterfaceColorText = mathutils.Vector((0.0, 0.0, 0.0, 1.0))
+CitiesBuildingsColorNormal = mathutils.Vector((0.5, 0.5, 0.5, 0.8))
+
+# For the first script launch apply normal colors to objects
 if sceneInterface.objects['Level1 City Parent'].localPosition == mathutils.Vector((0.1, -0.11, 0.0)):
+    sceneInterface.objects['Level1 City Parent'].localPosition = mathutils.Vector((0.1, -0.1, 0.0))
     for objectIterate in sceneInterface.objects:
-        if not 'Text' in objectIterate.name:
-            sceneInterface.objects['Level1 City Parent'].localPosition = mathutils.Vector((0.1, -0.1, 0.0))
-            objectIterate.playAction('InterfaceClickedOff', 1, 12, layer = 0, play_mode = bge.logic.KX_ACTION_MODE_PLAY)
+        if 'Text' in objectIterate.name:
+            objectIterate.color = InterfaceColorText
         else:
-            objectIterate.playAction('InterfaceText', 1, 12, layer = 0, play_mode = bge.logic.KX_ACTION_MODE_PLAY)
+            objectIterate.color = InterfaceColorNormal
+    for objectIterate in sceneCity.objects:
+        if 'Building' in objectIterate.name:
+            objectIterate.color = CitiesBuildingsColorNormal
 
 # If left mouse button clicked
 if bge.logic.mouse.events[bge.events.LEFTMOUSE] == bge.logic.KX_INPUT_JUST_ACTIVATED:
@@ -72,24 +102,21 @@ if bge.logic.mouse.events[bge.events.LEFTMOUSE] == bge.logic.KX_INPUT_JUST_ACTIV
     Level4Current = sceneInterface.objects['Action']
     Level4ClickedCurrent = sceneInterface.objects['Action']
     
-    # Assign colors which will be used later
-    ColorClickedOn = mathutils.Vector((0.5, 0.5, 0.5, 0.7))
-    
     # Find current clicked and visible objects
     for objectIterate in sceneInterface.objects:
-        if objectIterate.color == ColorClickedOn and 'Level1' in objectIterate.name:
+        if objectIterate.color == InterfaceColorClicked and 'Level1' in objectIterate.name:
             Level1ClickedCurrent = objectIterate
         if objectIterate.localPosition == mathutils.Vector((2.1, -0.1, 0.0)):
             Level2Current = objectIterate
-        if objectIterate.color == ColorClickedOn and 'Level2' in objectIterate.name:
+        if objectIterate.color == InterfaceColorClicked and 'Level2' in objectIterate.name:
             Level2ClickedCurrent = objectIterate
         if objectIterate.localPosition == mathutils.Vector((4.1, -0.1, 0.0)):
             Level3Current = objectIterate
-        if objectIterate.color == ColorClickedOn and 'Level3' in objectIterate.name:
+        if objectIterate.color == InterfaceColorClicked and 'Level3' in objectIterate.name:
             Level3ClickedCurrent = objectIterate
         if objectIterate.localPosition == mathutils.Vector((6.1, -0.1, 0.0)):
             Level4Current = objectIterate
-        if objectIterate.color == ColorClickedOn and 'Level4' in objectIterate.name:
+        if objectIterate.color == InterfaceColorClicked and 'Level4' in objectIterate.name:
             Level4ClickedCurrent = objectIterate
     
     # If clicked interface Level 1
@@ -100,40 +127,29 @@ if bge.logic.mouse.events[bge.events.LEFTMOUSE] == bge.logic.KX_INPUT_JUST_ACTIV
         level4Clear()
     
     # If clicked interface Level 2
-    if 'Level2' in objectClicked.name:
+    elif 'Level2' in objectClicked.name:
         level2Clear()
         level3Clear()
         level4Clear()
         
-        if objectClicked.name == 'Level2 Buildings Height':
+        if not 'Selected' in objectClicked.name:
+            if 'Buildings' in objectClicked.name:
+                SheetName = 'Buildings'
+                SheetColumn = str(objectClicked.name).replace('Level2 Buildings ', '')
+                Level2Parameter(SheetName, SheetColumn)
             
-            # Show buildings height x25
-            WorkbookPath = os.path.join('Cities', 'Irkutsk', 'Irkutsk.xls')
-            SheetName = 'Buildings'
-            WorkbookSheet(WorkbookPath, SheetName)
-            
-            Sheet = WorkbookSheet(WorkbookPath, SheetName)
-            SheetColumn = 'Height'
-            WorkbookSheetColumnNumber(Sheet, SheetColumn)
-            SheetColumnNumber = WorkbookSheetColumnNumber(Sheet, SheetColumn)
-            
-            # Iterate all lines in sheet, 'for SheetRow in range(Sheet.nrows):' will not work, I don't know why
-            for SheetRow in range(1, 99999):
-                ObjectCurrentName = Sheet.cell(SheetRow,0).value
-                if ObjectCurrentName in sceneCity.objects:
-                    objectCurrent = sceneCity.objects[ObjectCurrentName]
-                    
-                    # Convert cell value which was read from workbook from float to string, remove 'text:' and '.0' from it, play action
-                    actionCurrent = 'ScaleZ1-' + str(Sheet.cell(SheetRow,SheetColumnNumber).value).replace('text:', '').replace('.0', '')
-                    objectCurrent.playAction(actionCurrent, 1, 12, layer = 0, play_mode = bge.logic.KX_ACTION_MODE_PLAY)
+            elif 'Streets' in objectClicked.name:
+                SheetName = 'Streets'
+                SheetColumn = str(objectClicked.name).replace('Level2 Streets ', '')
+                Level2Parameter(SheetName, SheetColumn)
     
     # If clicked interface Level 3
-    if 'Level3' in objectClicked.name:
+    elif 'Level3' in objectClicked.name:
         level3Clear()
         level4Clear()
     
     # If clicked interface Level 4
-    if 'Level4' in objectClicked.name:
+    elif 'Level4' in objectClicked.name:
         level4Clear()
     
     # Highlight clicked item and show its inside next level items
