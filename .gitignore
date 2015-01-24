@@ -1,3 +1,14 @@
+#############
+## ArchoPlanet
+#############
+Archive/
+Test/
+
+Data/Osm/*
+!Data/Osm/104.300000,52.200000,104.350000,52.250000.osm
+Data/Srtm3/*
+!Data/Srtm3/N52E104.hgt
+
 #################
 ## Eclipse
 #################
@@ -161,10 +172,3 @@ pip-log.txt
 
 # Mac crap
 .DS_Store
-
-#ArchoPlanet
-imp
-МБЗГУ/*.*
-*.dwl
-*.dwl2
-*.bak
